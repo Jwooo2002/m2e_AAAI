@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Motion-to-Event Generation Demo</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d10;
+      --bg2: #0f1319;
+      --panel: #151922;
+      --panel2: #10141b;
+      --line: #2a3240;
+      --line2: #364256;
+      --text: #e8edf2;
+      --muted: #9aa7b3;
+      --muted2: #c4ccd6;
+      --blue: #78a8ff;
+      --green: #4ce36b;
+      --red: #ff684f;
+      --yellow: #f2c94c;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top left, #142033 0, #0b0d10 34%, #090b0e 100%);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+
+    a { color: var(--blue); }
+
+    header.hero {
+      padding: 34px 34px 22px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(15, 19, 25, 0.94);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(14px);
+    }
+
+    .hero-inner {
+      display: grid;
+      gap: 18px;
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(25px, 3.2vw, 42px);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+      font-weight: 760;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      max-width: 880px;
+      font-size: 15px;
+    }
+
+    .badge {
+      border: 1px solid var(--line2);
+      color: var(--muted2);
+      background: #0d121a;
+      border-radius: 999px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-family: var(--mono);
+      white-space: nowrap;
+    }
+
+    .top-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 14px;
+    }
+
+    .top-tab,
+    .side-tab {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+      transition: 120ms ease;
+    }
+
+    .top-tab {
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 620;
+    }
+
+    .top-tab:hover,
+    .top-tab.active,
+    .side-tab:hover,
+    .side-tab.active {
+      border-color: var(--blue);
+      background: #182033;
+    }
+
+    main {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 28px 34px 48px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 22px;
+      letter-spacing: -0.01em;
+    }
+
+    .section-note {
+      margin: 0 0 20px;
+      color: var(--muted);
+      max-width: 900px;
+      font-size: 14px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .cards.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(21, 25, 34, 0.92);
+      overflow: hidden;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.22);
+    }
+
+    .card-body {
+      padding: 16px;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .media {
+      background: #020304;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      min-height: 250px;
+    }
+
+    .media video,
+    .media img {
+      display: block;
+      width: 100%;
+      max-height: 520px;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .media.small { min-height: 180px; }
+    .media.small img { max-height: 320px; }
+
+    .meta {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: var(--muted2);
+      background: #0e131b;
+      font-size: 12px;
+      font-family: var(--mono);
+    }
+
+    .block {
+      margin-top: 26px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(16, 20, 27, 0.88);
+      padding: 20px;
+    }
+
+    .pipeline-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .pipe-step {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #111722;
+      padding: 14px;
+      min-height: 150px;
+      position: relative;
+    }
+
+    .pipe-step::after {
+      content: "→";
+      position: absolute;
+      right: -11px;
+      top: 44%;
+      color: var(--blue);
+      font-size: 18px;
+      z-index: 1;
+    }
+
+    .pipe-step:last-child::after { display: none; }
+
+    .pipe-step .num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      background: #182033;
+      border: 1px solid var(--blue);
+      color: var(--blue);
+      font-family: var(--mono);
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .pipe-step h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .pipe-step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .report-layout {
+      display: grid;
+      grid-template-columns: 270px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .report-sidebar {
+      position: sticky;
+      top: 150px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(16,20,27,0.9);
+      padding: 14px;
+    }
+
+    .side-tabs {
+      display: grid;
+      gap: 8px;
+    }
+
+    .side-tab {
+      width: 100%;
+      text-align: left;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 13px;
+    }
+
+    .legend {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .report-view { display: none; }
+    .report-view.active { display: block; }
+
+    .viewer-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .viewer {
+      background: #020304;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      min-height: 460px;
+      display: grid;
+      place-items: center;
+    }
+
+    .viewer img {
+      display: block;
+      max-width: 100%;
+      max-height: 76vh;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .info {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(21,25,34,0.92);
+      padding: 16px;
+    }
+
+    .info h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .info p,
+    .info li {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    pre {
+      margin: 12px 0 0;
+      overflow: auto;
+      white-space: pre-wrap;
+      background: #090c11;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      color: #d9e2ee;
+      font-size: 12px;
+      font-family: var(--mono);
+      max-height: 420px;
+    }
+
+    code {
+      color: #c8dcff;
+      background: #0c1118;
+      border: 1px solid #202838;
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-size: 0.92em;
+      font-family: var(--mono);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #0f141c;
+    }
+
+    .stat strong {
+      display: block;
+      color: var(--text);
+      font-size: 18px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .note-box {
+      border-left: 3px solid var(--blue);
+      background: rgba(120, 168, 255, 0.07);
+      padding: 12px 14px;
+      color: var(--muted2);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1050px) {
+      header.hero { position: relative; }
+      .pipeline-row,
+      .result-grid,
+      .cards,
+      .cards.three { grid-template-columns: 1fr; }
+      .pipe-step::after { display: none; }
+      .report-layout,
+      .viewer-grid { grid-template-columns: 1fr; }
+      .report-sidebar { position: relative; top: auto; }
+      main, header.hero { padding-left: 18px; padding-right: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="title-row">
+        <div>
+          <h1>Motion-to-Event Generation Demo</h1>
+          <p class="subtitle">
+            D3 driving video에서 motion cue를 추출하고, 이를 target portrait sequence에 주입한 뒤
+            motion-induced temporal change를 event representation으로 변환하는 draft project page입니다.
+          </p>
+        </div>
+        <span class="badge">AAAI draft page · static GitHub Pages build</span>
+      </div>
+
+      <nav class="top-tabs" aria-label="project pages">
+        <button class="top-tab active" data-page="page-motion">Page 1 · Motion → Event</button>
+        <button class="top-tab" data-page="page-report">Page 2 · Semantic Mask Flow Report</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="page-motion" class="page active">
+      <h2 class="section-title">Page 1. Motion-Guided Event Generation from a Static Portrait</h2>
+      <p class="section-note">
+        이 페이지는 전체 idea를 보여주는 overview입니다. 핵심은 <code>d3.mp4</code>를 motion source로 사용하고,
+        target portrait에 해당 motion을 주입한 뒤, 결과 sequence에서 event stream을 생성하는 것입니다.
+      </p>
+
+      <div class="cards">
+        <article class="card">
+          <div class="media">
+            <video src="assets/d3_driving_video.mp4" poster="assets/d3_poster.jpg" controls muted loop playsinline preload="metadata"></video>
+          </div>
+          <div class="card-body">
+            <h3>Input A · D3 Driving Video</h3>
+            <p>D3 video는 driving motion source입니다. 연속 frame에서 temporal displacement / motion vector를 추정하는 기준으로 사용합니다.</p>
+            <div class="meta"><span class="pill">512×512</span><span class="pill">30 FPS</span><span class="pill">11.8 s</span><span class="pill">354 frames</span></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="media">
+            <video src="assets/generated_motion_injected_crop.mp4" poster="assets/generated_crop_poster.jpg" controls muted loop playsinline preload="metadata"></video>
+          </div>
+          <div class="card-body">
+            <h3>Output / Target Sequence</h3>
+            <p>추출된 motion cue를 target portrait appearance에 주입하여 생성한 motion-aware sequence입니다.</p>
+            <div class="meta"><span class="pill">512×512</span><span class="pill">30 FPS</span><span class="pill">11.8 s</span><span class="pill">354 frames</span></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="block">
+        <h2 class="section-title">Draft Pipeline</h2>
+        <p class="section-note">
+          현재 page의 설명은 draft 수준입니다. 구현 세부는 바뀔 수 있지만, page에서 보여주려는 narrative는 아래 순서로 고정합니다.
+        </p>
+        <div class="pipeline-row">
+          <div class="pipe-step">
+            <span class="num">1</span>
+            <h3>Driving Motion</h3>
+            <p>D3 video에서 frame-to-frame motion cue를 추출합니다.</p>
+          </div>
+          <div class="pipe-step">
+            <span class="num">2</span>
+            <h3>Motion Field</h3>
+            <p>motion vector / dense optical flow 형태로 local displacement를 구성합니다.</p>
+          </div>
+          <div class="pipe-step">
+            <span class="num">3</span>
+            <h3>Motion Injection</h3>
+            <p>target portrait image 또는 latent representation에 motion을 주입합니다.</p>
+          </div>
+          <div class="pipe-step">
+            <span class="num">4</span>
+            <h3>Animated Portrait</h3>
+            <p>appearance는 유지하면서 D3의 temporal dynamics를 따르는 sequence를 생성합니다.</p>
+          </div>
+          <div class="pipe-step">
+            <span class="num">5</span>
+            <h3>Event Synthesis</h3>
+            <p>motion-induced brightness change를 ON/OFF event stream으로 변환합니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h2 class="section-title">Event / Flow Visualizations</h2>
+        <p class="section-note">
+          아래 결과는 motion injection 이후의 temporal 변화와 event generation 결과를 빠르게 확인하기 위한 preview입니다.
+        </p>
+        <div class="result-grid">
+          <article class="card">
+            <div class="media small"><img src="assets/motion_preview.gif" alt="motion preview GIF"></div>
+            <div class="card-body">
+              <h3>Motion Preview</h3>
+              <p>Motion field로 portrait region을 warp한 preview입니다.</p>
+            </div>
+          </article>
+          <article class="card">
+            <div class="media small"><img src="assets/event_stream.gif" alt="event stream GIF"></div>
+            <div class="card-body">
+              <h3>Event Stream</h3>
+              <p>RGB background 위에 ON/OFF event trail을 누적한 visualization입니다.</p>
+            </div>
+          </article>
+          <article class="card">
+            <div class="media small"><img src="assets/event_stream_black.gif" alt="black event stream GIF"></div>
+            <div class="card-body">
+              <h3>Event Stream · Black</h3>
+              <p>배경을 제거하고 event polarity만 검은 배경 위에 표시합니다.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-report" class="page">
+      <h2 class="section-title">Page 2. Semantic Mask Flow Report</h2>
+      <p class="section-note">
+        사용자가 보낸 기존 report page를 두 번째 탭으로 통합했습니다. 이 page는 semantic mask 기반 synthetic flow 및 event visualization을 상세히 보여주는 draft report입니다.
+      </p>
+
+      <div class="report-layout">
+        <aside class="report-sidebar">
+          <nav class="side-tabs" aria-label="report sections">
+            <button class="side-tab active" data-report="report-pipeline">Pipeline</button>
+            <button class="side-tab" data-report="report-mask">Semantic Mask</button>
+            <button class="side-tab" data-report="report-flow">Flow Overlay</button>
+            <button class="side-tab" data-report="report-motion">Motion Preview</button>
+            <button class="side-tab" data-report="report-events">Event Stream</button>
+            <button class="side-tab" data-report="report-black">Event Stream Black</button>
+            <button class="side-tab" data-report="report-alt">Additional Event Output</button>
+            <button class="side-tab" data-report="report-stats">Statistics</button>
+          </nav>
+
+          <div class="legend">
+            <div class="legend-row"><span class="dot" style="background: var(--green)"></span>ON event: brightness increase</div>
+            <div class="legend-row"><span class="dot" style="background: var(--red)"></span>OFF event: brightness decrease</div>
+            <div class="legend-row"><span class="dot" style="background: var(--yellow)"></span>Yellow: ON/OFF overlap in GIF trail</div>
+          </div>
+        </aside>
+
+        <div class="report-content">
+          <section id="report-pipeline" class="report-view active">
+            <div class="block" style="margin-top:0">
+              <h2 class="section-title">Report Pipeline</h2>
+              <div class="note-box">
+                기존 HTML report의 내용을 single-page tab layout 안으로 옮겼습니다. 원래 report에서 누락되어 있던 <code>semantic_mask_flow/</code> 경로는 현재 ZIP에 들어있는 실제 asset 경로로 정리했습니다.
+              </div>
+              <div class="pipeline-row">
+                <div class="pipe-step">
+                  <span class="num">1</span>
+                  <h3>Landmark to Semantic Mask</h3>
+                  <p>얼굴 부위별 polygon / contour를 semantic region으로 변환합니다.</p>
+                </div>
+                <div class="pipe-step">
+                  <span class="num">2</span>
+                  <h3>Semantic Region Flow</h3>
+                  <p>eyes, mouth, eyebrow, jaw 등 region별 synthetic flow를 정의합니다.</p>
+                </div>
+                <div class="pipe-step">
+                  <span class="num">3</span>
+                  <h3>Frame Warping</h3>
+                  <p>Dense flow를 사용해 frame sequence를 생성하고 coherent motion을 확인합니다.</p>
+                </div>
+                <div class="pipe-step">
+                  <span class="num">4</span>
+                  <h3>Event Generation</h3>
+                  <p>인접 frame의 log-brightness 변화로 ON/OFF event를 생성합니다.</p>
+                </div>
+                <div class="pipe-step">
+                  <span class="num">5</span>
+                  <h3>Debug Outputs</h3>
+                  <p>flow overlay, motion preview, event GIF를 통해 결과를 검증합니다.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="report-mask" class="report-view">
+            <div class="viewer-grid">
+              <div class="viewer"><img src="assets/semantic_mask.png" alt="semantic mask"></div>
+              <div class="info">
+                <h3>Semantic Mask</h3>
+                <p>Landmark polygon으로 만든 얼굴 부위 mask입니다. 이 mask가 region-wise flow 설계의 기준입니다.</p>
+                <pre>0 background
+1 skin
+2 left_eye
+3 right_eye
+4 nose
+5 mouth
+6 left_eyebrow
+7 right_eyebrow
+8 jaw_or_contour</pre>
+              </div>
+            </div>
+          </section>
+
+          <section id="report-flow" class="report-view">
+            <div class="viewer-grid">
+              <div class="viewer"><img src="assets/arbitrary_flow_overlay.png" alt="flow overlay"></div>
+              <div class="info">
+                <h3>Flow Overlay</h3>
+                <p>Semantic region별 synthetic optical flow 방향을 arrow로 표시합니다.</p>
+                <pre>eyes: vertical
+mouth: open/stretch
+eyebrows: vertical lift
+jaw: small shift
+nose: almost fixed
+skin: weak drift</pre>
+              </div>
+            </div>
+          </section>
+
+          <section id="report-motion" class="report-view">
+            <div class="viewer-grid">
+              <div class="viewer"><img src="assets/motion_preview.gif" alt="motion preview GIF"></div>
+              <div class="info">
+                <h3>Motion Preview</h3>
+                <p>Semantic foreground를 중심으로 flow를 적용한 preview입니다.</p>
+                <p>Event를 보기 전, motion 자체가 자연스럽게 전달되는지 확인하는 용도입니다.</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="report-events" class="report-view">
+            <div class="viewer-grid">
+              <div class="viewer"><img src="assets/event_stream.gif" alt="event stream GIF"></div>
+              <div class="info">
+                <h3>Event Stream</h3>
+                <p>RGB background 위에 ON/OFF event를 누적 trail로 표시한 GIF입니다.</p>
+                <p>Green은 ON, red는 OFF, yellow는 ON/OFF가 가까운 위치나 시간에서 겹친 결과입니다.</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="report-black" class="report-view">
+            <div class="viewer-grid">
+              <div class="viewer"><img src="assets/event_stream_black.gif" alt="black event stream GIF"></div>
+              <div class="info">
+                <h3>Event Stream Black</h3>
+                <p>얼굴 RGB와 배경을 제거하고 event만 검은 배경에 표시한 GIF입니다.</p>
+                <p>Event 위치와 polarity만 검사할 때 가장 명확합니다.</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="report-alt" class="report-view">
+            <div class="result-grid">
+              <article class="card">
+                <div class="media small"><img src="assets/report_event_stream.gif" alt="additional event stream GIF"></div>
+                <div class="card-body">
+                  <h3>Additional Event Stream</h3>
+                  <p>업로드 ZIP의 <code>New folder1</code>에 포함된 event stream output입니다.</p>
+                </div>
+              </article>
+              <article class="card">
+                <div class="media small"><img src="assets/report_event_stream_black.gif" alt="additional black event stream GIF"></div>
+                <div class="card-body">
+                  <h3>Additional Event Stream · Black</h3>
+                  <p>동일 output의 black-background event visualization입니다.</p>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section id="report-stats" class="report-view">
+            <div class="viewer-grid">
+              <div class="info">
+                <h3>Summary Statistics</h3>
+                <div class="stats">
+                  <div class="stat"><strong>37,815</strong><span>Total events</span></div>
+                  <div class="stat"><strong>0</strong><span>Background events</span></div>
+                  <div class="stat"><strong>18,835</strong><span>ON events</span></div>
+                  <div class="stat"><strong>18,980</strong><span>OFF events</span></div>
+                </div>
+                <p>기존 report의 수치를 유지했습니다. JSON 파일은 현재 ZIP에 포함되어 있지 않아 HTML 내부 summary로만 보존했습니다.</p>
+              </div>
+              <div class="info">
+                <h3>Included Assets</h3>
+                <pre>assets/d3_driving_video.mp4
+assets/generated_motion_injected_crop.mp4
+assets/semantic_mask.png
+assets/arbitrary_flow_overlay.png
+assets/motion_preview.gif
+assets/event_stream.gif
+assets/event_stream_black.gif
+assets/report_event_stream.gif
+assets/report_event_stream_black.gif</pre>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const topTabs = Array.from(document.querySelectorAll(".top-tab"));
+    const pages = Array.from(document.querySelectorAll(".page"));
+    const sideTabs = Array.from(document.querySelectorAll(".side-tab"));
+    const reportViews = Array.from(document.querySelectorAll(".report-view"));
+
+    function activatePage(pageId, updateHash = true) {
+      topTabs.forEach(tab => tab.classList.toggle("active", tab.dataset.page === pageId));
+      pages.forEach(page => page.classList.toggle("active", page.id === pageId));
+      if (updateHash) history.replaceState(null, "", "#" + pageId);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function activateReport(reportId, updateHash = true) {
+      sideTabs.forEach(tab => tab.classList.toggle("active", tab.dataset.report === reportId));
+      reportViews.forEach(view => view.classList.toggle("active", view.id === reportId));
+      activatePage("page-report", false);
+      if (updateHash) history.replaceState(null, "", "#page-report/" + reportId);
+    }
+
+    topTabs.forEach(tab => {
+      tab.addEventListener("click", () => activatePage(tab.dataset.page));
+    });
+
+    sideTabs.forEach(tab => {
+      tab.addEventListener("click", () => activateReport(tab.dataset.report));
+    });
+
+    function bootFromHash() {
+      const hash = location.hash.replace(/^#/, "");
+      if (!hash) return;
+      const [pageId, reportId] = hash.split("/");
+      if (pageId && document.getElementById(pageId)) activatePage(pageId, false);
+      if (reportId && document.getElementById(reportId)) activateReport(reportId, false);
+    }
+
+    bootFromHash();
+  </script>
+</body>
+</html>
