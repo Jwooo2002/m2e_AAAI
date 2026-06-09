@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Semantic Mask Flow Event Report</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d10;
+      --panel: #151922;
+      --panel-2: #10141b;
+      --line: #2a3240;
+      --text: #e8edf2;
+      --muted: #9aa7b3;
+      --green: #4ce36b;
+      --red: #ff684f;
+      --blue: #78a8ff;
+      --yellow: #f2c94c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 28px 32px 20px;
+      border-bottom: 1px solid var(--line);
+      background: #0f1319;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      max-width: 920px;
+      font-size: 15px;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: calc(100vh - 98px);
+    }
+
+    aside {
+      border-right: 1px solid var(--line);
+      padding: 20px;
+      background: var(--panel-2);
+    }
+
+    .tabs {
+      display: grid;
+      gap: 8px;
+    }
+
+    button.tab {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button.tab:hover,
+    button.tab.active {
+      border-color: var(--blue);
+      background: #182033;
+    }
+
+    .legend {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .content {
+      padding: 24px 28px 36px;
+      overflow: hidden;
+    }
+
+    section.view {
+      display: none;
+    }
+
+    section.view.active {
+      display: block;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .viewer {
+      background: #050608;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+    }
+
+    .viewer img {
+      display: block;
+      max-width: 100%;
+      max-height: 78vh;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .info {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .info h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .info p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      background: #0f141c;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 18px;
+      color: var(--text);
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    pre {
+      overflow: auto;
+      white-space: pre-wrap;
+      background: #090c11;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 12px;
+      color: #d9e2ee;
+      font-size: 12px;
+      max-height: 420px;
+    }
+
+    .pipeline {
+      display: grid;
+      gap: 12px;
+      max-width: 960px;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .step h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    code {
+      color: #c8dcff;
+      background: #0c1118;
+      border: 1px solid #202838;
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-size: 0.92em;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Semantic Mask Flow Event Report</h1>
+    <p class="subtitle">
+      WFLW landmark 기반 semantic mask에서 얼굴 부위별 synthetic optical flow를 만들고,
+      flow로 이미지를 warp한 뒤 frame 간 log-brightness 변화로 ON/OFF event를 생성한 결과입니다.
+    </p>
+  </header>
+
+  <main>
+    <aside>
+      <nav class="tabs" aria-label="report views">
+        <button class="tab active" data-view="pipeline">Pipeline</button>
+        <button class="tab" data-view="mask">Semantic Mask</button>
+        <button class="tab" data-view="flow">Flow Overlay</button>
+        <button class="tab" data-view="magnitude">Flow Magnitude</button>
+        <button class="tab" data-view="motion">Motion Preview</button>
+        <button class="tab" data-view="events">Event Stream</button>
+        <button class="tab" data-view="black">Event Stream Black</button>
+        <button class="tab" data-view="stats">Statistics</button>
+      </nav>
+
+      <div class="legend">
+        <div class="legend-row"><span class="dot" style="background: var(--green)"></span>ON event: brightness increase</div>
+        <div class="legend-row"><span class="dot" style="background: var(--red)"></span>OFF event: brightness decrease</div>
+        <div class="legend-row"><span class="dot" style="background: var(--yellow)"></span>Yellow: ON/OFF overlap in GIF trail</div>
+      </div>
+    </aside>
+
+    <div class="content">
+      <section id="pipeline" class="view active">
+        <div class="pipeline">
+          <div class="step">
+            <h3>1. Landmark to Semantic Mask</h3>
+            <p>
+              WFLW landmark subset을 polygon/convex hull로 변환해서
+              <code>skin</code>, <code>left_eye</code>, <code>right_eye</code>,
+              <code>nose</code>, <code>mouth</code>, <code>eyebrow</code>,
+              <code>jaw_or_contour</code> region id를 만듭니다.
+            </p>
+          </div>
+          <div class="step">
+            <h3>2. Semantic Region Flow</h3>
+            <p>
+              <code>semantic_mask.npy</code>를 기준으로 eyes는 vertical, mouth는 open/stretch,
+              eyebrows는 lift, jaw는 small shift, nose는 almost fixed, skin은 weak drift를 부여합니다.
+            </p>
+          </div>
+          <div class="step">
+            <h3>3. Frame Warping</h3>
+            <p>
+              RGB 이미지를 grayscale/log intensity로 바꾼 뒤 dense flow로 forward-and-return cycle을 수행합니다.
+              모든 pixel이 같은 timeline을 공유하므로 독립 blob event보다 coherent motion에 가깝습니다.
+            </p>
+          </div>
+          <div class="step">
+            <h3>4. Event Generation</h3>
+            <p>
+              인접 warped frame 사이의 log brightness 변화가 threshold보다 크면 event를 생성합니다.
+              증가하면 <code>p=+1</code> ON, 감소하면 <code>p=-1</code> OFF입니다.
+            </p>
+          </div>
+          <div class="step">
+            <h3>5. Debug Outputs</h3>
+            <p>
+              flow 방향, flow magnitude, motion preview, RGB event stream, black event-only stream을 함께 저장해서
+              semantic motion과 event 위치를 비교합니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="mask" class="view">
+        <div class="grid">
+          <div class="viewer"><img src="semantic_mask.png" alt="semantic mask"></div>
+          <div class="info">
+            <h2>Semantic Mask</h2>
+            <p>Landmark polygon으로 만든 얼굴 부위 mask입니다. 이 mask가 flow 설계의 기준입니다.</p>
+            <pre>0 background
+1 skin
+2 left_eye
+3 right_eye
+4 nose
+5 mouth
+6 left_eyebrow
+7 right_eyebrow
+8 jaw_or_contour</pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="flow" class="view">
+        <div class="grid">
+          <div class="viewer"><img src="semantic_mask_flow/semantic_region_flow_overlay_2.png" alt="semantic region flow overlay"></div>
+          <div class="info">
+            <h2>Flow Overlay</h2>
+            <p>Semantic region별 synthetic optical flow 방향을 arrow로 표시합니다.</p>
+            <pre>eyes: vertical
+mouth: open/stretch
+eyebrows: vertical lift
+jaw: small shift
+nose: almost fixed
+skin: weak drift</pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="magnitude" class="view">
+        <div class="grid">
+          <div class="viewer"><img src="semantic_mask_flow/semantic_region_flow_magnitude_2.png" alt="semantic region flow magnitude"></div>
+          <div class="info">
+            <h2>Flow Magnitude</h2>
+            <p>Flow 크기를 heatmap으로 표시합니다. 밝을수록 motion magnitude가 큽니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="motion" class="view">
+        <div class="grid">
+          <div class="viewer"><img src="semantic_mask_flow/motion_preview_mask_2.gif" alt="motion preview mask gif"></div>
+          <div class="info">
+            <h2>Motion Preview</h2>
+            <p>Semantic foreground만 보이도록 mask한 상태에서 flow로 얼굴을 warp한 preview입니다.</p>
+            <p>Event를 보기 전에 motion 자체가 합리적인지 확인하는 용도입니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="events" class="view">
+        <div class="grid">
+          <div class="viewer"><img src="semantic_mask_flow/event_stream_mask_flow_2.gif" alt="event stream gif"></div>
+          <div class="info">
+            <h2>Event Stream</h2>
+            <p>RGB 배경 위에 ON/OFF event를 누적 trail로 표시한 GIF입니다.</p>
+            <p>Green은 ON, red는 OFF, yellow는 ON/OFF가 가까운 위치나 시간에서 겹친 결과입니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="black" class="view">
+        <div class="grid">
+          <div class="viewer"><img src="semantic_mask_flow/event_stream_mask_flow_black_2.gif" alt="black event stream gif"></div>
+          <div class="info">
+            <h2>Event Stream Black</h2>
+            <p>얼굴 RGB와 배경을 모두 제거하고 event만 검은 배경에 표시한 GIF입니다.</p>
+            <p>Event 위치와 polarity만 검사할 때 가장 명확합니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="stats" class="view">
+        <div class="grid">
+          <div class="info">
+            <h2>Summary Statistics</h2>
+            <div class="stats">
+              <div class="stat"><strong>37,815</strong><span>Total events</span></div>
+              <div class="stat"><strong>0</strong><span>Background events</span></div>
+              <div class="stat"><strong>18,835</strong><span>ON events</span></div>
+              <div class="stat"><strong>18,980</strong><span>OFF events</span></div>
+            </div>
+            <p>Full JSON은 아래 파일에 있습니다.</p>
+            <pre>semantic_mask_flow/event_statistics.json
+semantic_mask_flow/debug_summary_2.json</pre>
+          </div>
+          <div class="info">
+            <h2>Current Output Files</h2>
+            <pre>semantic_mask.png
+semantic_mask_flow/semantic_region_flow_overlay_2.png
+semantic_mask_flow/semantic_region_flow_magnitude_2.png
+semantic_mask_flow/motion_preview_mask_2.gif
+semantic_mask_flow/event_stream_mask_flow_2.gif
+semantic_mask_flow/event_stream_mask_flow_black_2.gif
+semantic_mask_flow/event_statistics.json
+semantic_mask_flow/debug_summary_2.json</pre>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const views = Array.from(document.querySelectorAll(".view"));
+
+    function activate(id) {
+      tabs.forEach(tab => tab.classList.toggle("active", tab.dataset.view === id));
+      views.forEach(view => view.classList.toggle("active", view.id === id));
+      history.replaceState(null, "", "#" + id);
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => activate(tab.dataset.view));
+    });
+
+    const initial = location.hash.replace("#", "");
+    if (initial && document.getElementById(initial)) {
+      activate(initial);
+    }
+  </script>
+</body>
+</html>
