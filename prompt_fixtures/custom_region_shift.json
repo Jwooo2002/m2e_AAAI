@@ -1,0 +1,13 @@
+{
+  "motions": [
+    {
+      "type": "custom_region_shift",
+      "semantic_label": "mouth",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "magnitude_px": 3.0
+    }
+  ]
+}

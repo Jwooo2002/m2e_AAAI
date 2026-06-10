@@ -134,6 +134,7 @@ def run_prompt_to_event(
             "events.csv",
             "event_preview.png",
             "validation_report.json",
+            "run_manifest.json",
         ],
         "notes": [
             "LivePortrait is not used.",
@@ -142,7 +143,112 @@ def run_prompt_to_event(
         ],
     }
     (output_dir / "run_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    manifest = build_run_manifest(
+        sample_index=sample_index,
+        motion_prompt=motion_prompt,
+        output_dir=output_dir,
+        threshold=threshold,
+        seed=seed,
+        n_segments=n_segments,
+        fixture=fixture,
+        source_info=source_info,
+        copied_image_path=copied_image_path,
+        landmarks_path=landmarks_path,
+        feature_summary=feature_summary,
+        binding_summary=binding_summary,
+        event_stats=event_stats,
+        validation_report=validation_report,
+        num_blobs=len(blob_meta),
+    )
+    (output_dir / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     return summary
+
+
+def build_run_manifest(
+    sample_index: int,
+    motion_prompt: Path,
+    output_dir: Path,
+    threshold: float,
+    seed: int,
+    n_segments: int,
+    fixture: bool,
+    source_info: dict,
+    copied_image_path: Path,
+    landmarks_path: Path,
+    feature_summary: dict,
+    binding_summary: dict,
+    event_stats: dict,
+    validation_report: dict,
+    num_blobs: int,
+) -> dict:
+    bound_motion_path = output_dir / "bound_blob_motion.json"
+    bound_motion_payload = json.loads(bound_motion_path.read_text(encoding="utf-8"))
+    schema_version = bound_motion_payload.get("schema_version")
+    bound_vectors = bound_motion_payload.get("blobs", bound_motion_payload.get("bound_blob_motion", []))
+    output_files = {
+        "source_rgb": output_dir / "source_rgb.png",
+        "landmarks": landmarks_path,
+        "semantic_mask": output_dir / "semantic_mask.npy",
+        "semantic_mask_png": output_dir / "semantic_mask.png",
+        "blob_map": output_dir / "blob_map.npy",
+        "blob_map_png": output_dir / "blob_map.png",
+        "blob_metadata": output_dir / "blob_metadata.json",
+        "blob_feature_context": output_dir / "blob_feature_context.json",
+        "bound_blob_motion": bound_motion_path,
+        "events_npy": output_dir / "events.npy",
+        "events_csv": output_dir / "events.csv",
+        "event_preview": output_dir / "event_preview.png",
+        "event_statistics": output_dir / "event_statistics.json",
+        "validation_report": output_dir / "validation_report.json",
+        "run_summary": output_dir / "run_summary.json",
+        "run_manifest": output_dir / "run_manifest.json",
+    }
+    return {
+        "mode": "prompt_to_direct_event",
+        "command": {
+            "entrypoint": "run_prompt_to_event.py",
+            "args": {
+                "fixture": bool(fixture),
+                "sample_index": int(sample_index),
+                "motion_prompt": str(motion_prompt),
+                "output_dir": str(output_dir),
+                "threshold": float(threshold),
+                "seed": int(seed),
+                "n_segments": int(n_segments),
+            },
+        },
+        "source": {
+            "fixture": bool(fixture),
+            "original_image_path": source_info.get("original_image_path"),
+            "copied_image_path": str(copied_image_path),
+            "landmarks_path": str(landmarks_path),
+            "annotation_file": source_info.get("annotation_file"),
+            "annotation_line_index": source_info.get("annotation_line_index"),
+        },
+        "config": {
+            "motion_prompt_path": str(motion_prompt),
+            "threshold": float(threshold),
+            "seed": int(seed),
+            "n_segments": int(n_segments),
+        },
+        "outputs": {name: str(path) for name, path in output_files.items()},
+        "summary": {
+            "schema_version": schema_version,
+            "num_blobs": int(num_blobs),
+            "num_bound_vectors": int(len(bound_vectors)) if isinstance(bound_vectors, list) else 0,
+            "num_events": int(event_stats["total_events"]),
+            "validation_passed": bool(validation_report["passed"]),
+            "polarity_distribution": event_stats["polarity_distribution"],
+            "motion_binding": binding_summary,
+            "face_feature_adapter": feature_summary,
+        },
+        "notes": [
+            "Direct image-to-event path.",
+            "No RGB video generation.",
+            "No LivePortrait motion source.",
+            "No image-to-video-to-event logic.",
+        ],
+    }
 
 
 def prepare_wflw_source(output_dir: Path, sample_index: int) -> dict:

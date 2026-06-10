@@ -1,0 +1,12 @@
+{
+  "motions": [
+    {
+      "type": "jaw_shift",
+      "direction": [
+        1.0,
+        0.1
+      ],
+      "magnitude_px": 3.0
+    }
+  ]
+}

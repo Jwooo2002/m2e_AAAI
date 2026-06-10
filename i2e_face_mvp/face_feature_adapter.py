@@ -8,8 +8,12 @@ from typing import Any
 import cv2
 import numpy as np
 
-from .semantics import PALETTE, REGION_LABELS
-from .wflw import wflw_semantic_anchors
+try:
+    from .semantics import PALETTE, REGION_LABELS
+    from .wflw import wflw_semantic_anchors
+except ImportError:  # Allows `python i2e_face_mvp/face_feature_adapter.py ...`.
+    from semantics import PALETTE, REGION_LABELS
+    from wflw import wflw_semantic_anchors
 
 
 ANCHOR_GROUPS = {

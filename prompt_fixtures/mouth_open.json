@@ -1,0 +1,8 @@
+{
+  "motions": [
+    {
+      "type": "mouth_open",
+      "magnitude_px": 5.0
+    }
+  ]
+}

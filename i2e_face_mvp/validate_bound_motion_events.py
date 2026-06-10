@@ -7,7 +7,10 @@ from typing import Any
 
 import numpy as np
 
-from .events import EVENT_DTYPE
+try:
+    from .events import EVENT_DTYPE
+except ImportError:  # Allows `python i2e_face_mvp/validate_bound_motion_events.py ...`.
+    from events import EVENT_DTYPE
 
 
 EXPECTED_COLUMNS = ["x", "y", "t", "p", "blob_id", "semantic_id"]
@@ -218,7 +221,10 @@ def run_threshold_sensitivity(
                 "thresholds": [float(v) for v in thresholds],
             }
         ]
-    from .bound_motion_events import run_bound_motion_event_generation
+    try:
+        from .bound_motion_events import run_bound_motion_event_generation
+    except ImportError:  # Allows direct script execution.
+        from bound_motion_events import run_bound_motion_event_generation
 
     rows = []
     for threshold in thresholds[:3]:

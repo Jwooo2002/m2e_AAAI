@@ -8,7 +8,13 @@ from typing import Any
 import cv2
 import numpy as np
 
-from .events import EVENT_DTYPE, save_events_csv
+try:
+    from .events import EVENT_DTYPE, save_events_csv
+except ImportError:  # Allows `python i2e_face_mvp/bound_motion_events.py ...`.
+    from events import EVENT_DTYPE, save_events_csv
+
+
+SUPPORTED_MOTION_SCHEMA_VERSION = "bound_blob_motion.v1"
 
 
 def run_bound_motion_event_generation(
@@ -26,9 +32,7 @@ def run_bound_motion_event_generation(
     semantic_mask = np.load(semantic_mask_path)
     blob_map = np.load(blob_map_path)
     motion_payload = json.loads(bound_blob_motion_path.read_text(encoding="utf-8"))
-    blob_motion = motion_payload.get("bound_blob_motion")
-    if not isinstance(blob_motion, list):
-        raise ValueError("bound_blob_motion.json must contain a 'bound_blob_motion' list")
+    blob_motion = load_bound_blob_motion_rows(motion_payload)
     validate_inputs(image_rgb, semantic_mask, blob_map)
 
     flow_x, flow_y, semantic_by_blob = build_dense_flow_from_bound_motion(blob_map, blob_motion)
@@ -62,6 +66,21 @@ def run_bound_motion_event_generation(
     )
     (output_dir / "event_statistics.json").write_text(json.dumps(stats, indent=2), encoding="utf-8")
     return stats
+
+
+def load_bound_blob_motion_rows(motion_payload: dict[str, Any]) -> list[dict[str, Any]]:
+    schema_version = motion_payload.get("schema_version")
+    if schema_version not in (None, SUPPORTED_MOTION_SCHEMA_VERSION):
+        raise ValueError(
+            f"unsupported bound motion schema_version {schema_version!r}; "
+            f"expected {SUPPORTED_MOTION_SCHEMA_VERSION!r}"
+        )
+    blob_motion = motion_payload.get("blobs")
+    if blob_motion is None:
+        blob_motion = motion_payload.get("bound_blob_motion")
+    if not isinstance(blob_motion, list):
+        raise ValueError("bound_blob_motion.json must contain a canonical 'blobs' list or legacy 'bound_blob_motion' list")
+    return blob_motion
 
 
 def generate_events_from_directional_change(
@@ -141,7 +160,7 @@ def build_dense_flow_from_bound_motion(
         blob_id = int(row["blob_id"])
         motion = row.get("motion_px")
         if not isinstance(motion, list) or len(motion) != 2:
-            continue
+            raise ValueError(f"blob {blob_id} must define motion_px as [dx, dy]")
         mask = blob_map == blob_id
         if not mask.any():
             continue

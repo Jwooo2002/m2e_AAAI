@@ -1,5 +1,7 @@
 # Archived Experimental Code
 
+This folder is archived. Nothing under `old/` is part of the active pipeline, and new work should not depend on it unless explicitly requested.
+
 This folder keeps earlier exploratory code paths so they can be recovered later without keeping them in the main prompt-to-event path.
 
 Archived here:

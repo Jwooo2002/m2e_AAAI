@@ -1,0 +1,8 @@
+{
+  "motions": [
+    {
+      "type": "mouth_stretch",
+      "magnitude_px": 4.0
+    }
+  ]
+}

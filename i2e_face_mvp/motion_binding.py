@@ -19,6 +19,8 @@ SUPPORTED_PROMPTS = {
     "custom_region_shift",
 }
 
+MOTION_VECTOR_SCHEMA_VERSION = "bound_blob_motion.v1"
+
 
 def run_motion_binding(
     blob_feature_context_path: Path,
@@ -34,20 +36,13 @@ def run_motion_binding(
 
     output_dir.mkdir(parents=True, exist_ok=True)
     bound = bind_prompts_to_blobs(blobs, prompts)
-    output = {
-        "mode": "external_prompt_to_blob_motion",
-        "blob_feature_context_path": str(blob_feature_context_path),
-        "motion_prompt_path": str(motion_prompt_path),
-        "supported_prompts": sorted(SUPPORTED_PROMPTS),
-        "input_prompts": prompts,
-        "bound_blob_motion": bound["blob_motion"],
-        "warnings": bound["warnings"],
-        "notes": [
-            "This module only binds external prompt motion to blob-level vectors.",
-            "No events are generated here.",
-            "No video is created here.",
-        ],
-    }
+    output = build_bound_motion_payload(
+        blob_feature_context_path=blob_feature_context_path,
+        motion_prompt_path=motion_prompt_path,
+        prompts=prompts,
+        bound_blob_motion=bound["blob_motion"],
+        warnings=bound["warnings"],
+    )
     (output_dir / "bound_blob_motion.json").write_text(json.dumps(output, indent=2), encoding="utf-8")
 
     image_path = feature_payload.get("source_image_path")
@@ -58,11 +53,105 @@ def run_motion_binding(
 
     return {
         "mode": "external_prompt_to_blob_motion",
+        "schema_version": MOTION_VECTOR_SCHEMA_VERSION,
         "output_dir": str(output_dir),
         "num_prompts": len(prompts),
         "num_bound_blobs": len(bound["blob_motion"]),
         "outputs": ["bound_blob_motion.json", "bound_motion_overlay.png"],
         "warnings": bound["warnings"],
+    }
+
+
+def build_bound_motion_payload(
+    blob_feature_context_path: Path,
+    motion_prompt_path: Path,
+    prompts: list[dict[str, Any]],
+    bound_blob_motion: list[dict[str, Any]],
+    warnings: list[str],
+) -> dict[str, Any]:
+    summary = summarize_bound_motion(prompts, bound_blob_motion, warnings)
+    return {
+        "schema_version": MOTION_VECTOR_SCHEMA_VERSION,
+        "mode": "external_prompt_to_blob_motion",
+        "source": {
+            "blob_feature_context_path": str(blob_feature_context_path),
+        },
+        "motion_prompt": {
+            "path": str(motion_prompt_path),
+            "prompts": prompts,
+            "supported_prompt_types": sorted(SUPPORTED_PROMPTS),
+        },
+        "blobs": bound_blob_motion,
+        "summary": summary,
+        "contract": {
+            "input": {
+                "blob_feature_context_path": str(blob_feature_context_path),
+                "motion_prompt_path": str(motion_prompt_path),
+                "motion_prompt_format": {
+                    "motions": [
+                        {
+                            "type": sorted(SUPPORTED_PROMPTS),
+                            "magnitude_px": "non-negative float displacement over the event window",
+                            "strength": "optional float multiplier, default 1.0",
+                            "duration_ms": "optional positive float, default 140.0",
+                            "direction": "required [dx, dy] for custom_region_shift; optional for jaw_shift",
+                            "target": "optional semantic label or region selector for custom_region_shift",
+                            "semantic_label": "optional semantic label selector for custom_region_shift",
+                            "control_group": "optional control-group selector for custom_region_shift",
+                            "region_consistency_group": "optional consistency-group selector for custom_region_shift",
+                        }
+                    ]
+                },
+            },
+            "output": {
+                "bound_blob_motion": [
+                    {
+                        "blob_id": "int blob id from blob_map.npy",
+                        "semantic_id": "int semantic id from semantic_mask.npy",
+                        "semantic_label": "string semantic label",
+                        "centroid": "[x, y] in source image pixels",
+                        "bbox": "[x0, y0, x1, y1] in source image pixels",
+                        "motion_px": "[dx, dy] total displacement in pixels over the event window",
+                        "motion_context": "normalized direction, magnitude, and polarity hint",
+                        "source_prompts": "prompt contributions used to produce this vector",
+                    }
+                ]
+            },
+            "downstream_consumer": "i2e_face_mvp.bound_motion_events",
+        },
+        "blob_feature_context_path": str(blob_feature_context_path),
+        "motion_prompt_path": str(motion_prompt_path),
+        "supported_prompts": sorted(SUPPORTED_PROMPTS),
+        "input_prompts": prompts,
+        "bound_blob_motion": bound_blob_motion,
+        "warnings": warnings,
+        "notes": [
+            "This module only binds external prompt motion to blob-level vectors.",
+            "No events are generated here.",
+            "No video is created here.",
+        ],
+    }
+
+
+def summarize_bound_motion(
+    prompts: list[dict[str, Any]],
+    bound_blob_motion: list[dict[str, Any]],
+    warnings: list[str],
+) -> dict[str, Any]:
+    magnitudes = [float(row.get("motion_context", {}).get("magnitude", 0.0)) for row in bound_blob_motion]
+    moving = [value for value in magnitudes if value > 1e-6]
+    semantic_counts: dict[str, int] = {}
+    for row in bound_blob_motion:
+        label = str(row.get("semantic_label", "unknown"))
+        semantic_counts[label] = semantic_counts.get(label, 0) + 1
+    return {
+        "num_prompts": int(len(prompts)),
+        "num_bound_blobs": int(len(bound_blob_motion)),
+        "num_moving_blobs": int(len(moving)),
+        "max_motion_px": float(max(magnitudes)) if magnitudes else 0.0,
+        "mean_motion_px": float(np.mean(magnitudes)) if magnitudes else 0.0,
+        "semantic_counts": dict(sorted(semantic_counts.items())),
+        "warnings": warnings,
     }
 
 

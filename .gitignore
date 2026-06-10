@@ -1,16 +1,22 @@
 # Python cache/build artifacts
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
 build/
 dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
 
 # Local IDE/editor state
 .idea/
 .vscode/
 
 # Generated experiment outputs
-outputs/
+outputs/*
+!outputs/.gitkeep
 
 # Large local data artifacts
 *.npy
@@ -22,3 +28,9 @@ outputs/
 # Environment/local files
 .env
 .env.*
+
+# Temporary artifacts
+*.tmp
+*.temp
+*.log
+.DS_Store
