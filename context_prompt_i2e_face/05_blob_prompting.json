@@ -1,0 +1,42 @@
+{
+  "module": "blob_context_prompting",
+  "goal": "Create structured context prompts for each superpixel blob to guide blob-level image-to-event generation.",
+  "requirements": [
+    "Each blob must receive motion context based on its semantic label.",
+    "Motion should be simple and heuristic for the MVP.",
+    "Eyes may blink or move vertically.",
+    "Mouth may open, close, or stretch slightly.",
+    "Nose should remain mostly rigid.",
+    "Skin and cheek blobs should have small smooth residual motion.",
+    "Jaw and contour blobs may follow small global head motion.",
+    "The prompt must be deterministic given the same random seed."
+  ],
+  "blob_prompt_schema": {
+    "blob_id": "integer",
+    "semantic_label": "string",
+    "appearance_context": {
+      "bbox": "[x1, y1, x2, y2]",
+      "centroid": "[x, y]",
+      "area": "integer",
+      "mean_rgb": "[r, g, b]",
+      "local_texture_strength": "float"
+    },
+    "motion_context": {
+      "motion_type": "blink | mouth_open | mouth_close | rigid | residual | contour_shift",
+      "direction": "[dx, dy]",
+      "magnitude": "float",
+      "duration_ms": "integer",
+      "temporal_profile": "linear | sinusoidal | ease_in_out",
+      "polarity_hint": "positive | negative | mixed"
+    },
+    "event_generation_context": {
+      "contrast_threshold": "float",
+      "noise_level": "float",
+      "timestamp_start": "float",
+      "timestamp_end": "float"
+    }
+  },
+  "output": {
+    "blob_prompts": "List of blob prompt dictionaries"
+  }
+}

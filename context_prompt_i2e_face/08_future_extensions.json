@@ -1,0 +1,12 @@
+{
+  "module": "future_extensions",
+  "goal": "Document planned extensions beyond the MVP.",
+  "extensions": [
+    "Replace heuristic blob motion with optical-flow priors learned from CelebV-HQ or eCelebV-style face videos.",
+    "Replace polygon-based parsing with a pretrained face parsing model.",
+    "Add stochastic multi-sample motion generation from one image.",
+    "Add V2E-compatible event camera noise and threshold models.",
+    "Evaluate generated events on real event-based face landmark, blink detection, or expression recognition tasks.",
+    "Extend from face-specific semantic priors to other structured object categories."
+  ]
+}

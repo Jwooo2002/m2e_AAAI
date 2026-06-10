@@ -1,0 +1,26 @@
+{
+  "module": "blob_i2e_generation",
+  "goal": "Generate synthetic events by applying blob-level motion and event rendering.",
+  "requirements": [
+    "For MVP, implement a simple event simulator based on intensity changes caused by blob motion.",
+    "Warp each blob according to its motion context.",
+    "Compute log-intensity difference over time.",
+    "Generate ON/OFF events when the contrast threshold is crossed.",
+    "Aggregate events from all blobs into one event stream.",
+    "Keep blob_id and semantic_label as optional event metadata for debugging.",
+    "Avoid unrealistic event bursts by clipping maximum events per blob per timestep."
+  ],
+  "event_format": {
+    "x": "integer pixel coordinate",
+    "y": "integer pixel coordinate",
+    "t": "timestamp in milliseconds or seconds",
+    "p": "polarity, +1 for ON and -1 for OFF",
+    "blob_id": "optional integer",
+    "semantic_label": "optional string"
+  },
+  "output": {
+    "events": "N x 4 or N x 6 event array",
+    "event_voxel": "optional voxel grid representation",
+    "event_frame_preview": "2D accumulated event visualization"
+  }
+}

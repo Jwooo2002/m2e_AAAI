@@ -1,0 +1,20 @@
+{
+  "motions": [
+    {
+      "type": "blink_both_eyes",
+      "magnitude_px": 4.0
+    },
+    {
+      "type": "mouth_open",
+      "magnitude_px": 5.0
+    },
+    {
+      "type": "jaw_shift",
+      "direction": [
+        1,
+        0.1
+      ],
+      "magnitude_px": 3.0
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "project": "Context-Prompted Image-to-Event Face Synthesis",
+  "role": "research_prototype_builder",
+  "objective": "Build an MVP pipeline that generates synthetic event data from a single RGB face image using existing facial keypoint annotations, semantic parsing, superpixels, and blob-level image-to-event prompting.",
+  "scope": {
+    "input": "single RGB face image with existing facial keypoint annotation",
+    "domain": "frontal or near-frontal human face images",
+    "output": "synthetic event stream, event-like representation, and debug visualizations",
+    "mvp_only": true,
+    "training_required": false
+  },
+  "core_constraints": [
+    "Do not train a model in this MVP.",
+    "Do not require video input.",
+    "Do not run a separate landmark detector.",
+    "Use existing keypoint annotations from the dataset.",
+    "Keep motion heuristic simple but explicitly tied to facial semantics.",
+    "Make every intermediate output inspectable."
+  ]
+}

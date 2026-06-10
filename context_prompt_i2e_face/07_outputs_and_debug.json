@@ -1,0 +1,31 @@
+{
+  "module": "outputs_and_debug",
+  "goal": "Save inspectable outputs for every stage of the MVP pipeline.",
+  "requirements": [
+    "Save all intermediate outputs to output_dir.",
+    "Save JSON files with human-readable indentation.",
+    "Save visualizations as PNG files.",
+    "Save events as both .npy and .csv if feasible.",
+    "Include a run_summary.json with counts and basic diagnostics.",
+    "Log warnings for missing keypoint groups, empty semantic regions, tiny blobs, and zero-event outputs."
+  ],
+  "required_files": [
+    "landmarks.json",
+    "semantic_anchors.json",
+    "semantic_mask.png",
+    "semantic_mask.npy",
+    "blob_map.png",
+    "blob_map.npy",
+    "blob_metadata.json",
+    "blob_prompts.json",
+    "events.npy",
+    "events.csv",
+    "event_frame_preview.png",
+    "run_summary.json"
+  ],
+  "success_criteria": [
+    "Given one face image and its existing keypoint annotation, the pipeline outputs landmarks, semantic masks, superpixels, blob prompts, and synthetic events.",
+    "Events should concentrate around moving semantic regions such as eyes, mouth, and face contour.",
+    "The pipeline should be modular so that heuristic motion can later be replaced by learned optical-flow priors."
+  ]
+}

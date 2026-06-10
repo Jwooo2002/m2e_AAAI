@@ -1,0 +1,32 @@
+{
+  "module": "semantic_parsing",
+  "goal": "Build coarse facial semantic regions from existing keypoint annotations.",
+  "requirements": [
+    "Create binary or indexed masks for eyes, nose, mouth, eyebrows, skin, jaw/contour, and background.",
+    "Use polygon filling from keypoint groups.",
+    "If a region cannot be reliably formed, skip it gracefully and log a warning.",
+    "Keep semantic region IDs consistent across images.",
+    "The background must remain label 0.",
+    "The face skin region should exclude explicit eye, mouth, eyebrow, and nose regions where possible."
+  ],
+  "region_labels": {
+    "0": "background",
+    "1": "skin",
+    "2": "left_eye",
+    "3": "right_eye",
+    "4": "nose",
+    "5": "mouth",
+    "6": "left_eyebrow",
+    "7": "right_eyebrow",
+    "8": "jaw_or_contour"
+  },
+  "output": {
+    "semantic_mask": "H x W integer mask",
+    "semantic_region_stats": {
+      "region_id": "integer",
+      "label": "string",
+      "area": "integer",
+      "bbox": "[x1, y1, x2, y2]"
+    }
+  }
+}

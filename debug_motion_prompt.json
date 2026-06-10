@@ -1,0 +1,16 @@
+{
+  "motions": [
+    {
+      "target": "left_eye",
+      "direction": [0, 1],
+      "magnitude_px": 5,
+      "duration_ms": 80
+    },
+    {
+      "target": "mouth",
+      "direction": [0, -1],
+      "magnitude_px": 6,
+      "duration_ms": 120
+    }
+  ]
+}

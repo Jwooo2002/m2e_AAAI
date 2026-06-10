@@ -1,0 +1,12 @@
+name: m2e_init
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy
+  - opencv
+  - pillow
+  - pip
+  - pip:
+    - -e .

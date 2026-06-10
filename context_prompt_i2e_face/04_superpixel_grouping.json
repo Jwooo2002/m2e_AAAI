@@ -1,0 +1,27 @@
+{
+  "module": "superpixel_grouping",
+  "goal": "Generate superpixels inside the face region and assign each blob to a dominant semantic region.",
+  "requirements": [
+    "Use SLIC or an equivalent superpixel algorithm.",
+    "Run superpixels mainly inside the face mask or semantic foreground.",
+    "Assign each superpixel a dominant semantic label from the semantic mask.",
+    "Discard tiny blobs or merge them into neighboring blobs.",
+    "Preserve blob metadata for downstream prompting.",
+    "Do not treat superpixels as independent semantic regions; they are local texture/detail units."
+  ],
+  "blob_metadata_schema": {
+    "blob_id": "integer",
+    "semantic_label": "string",
+    "semantic_id": "integer",
+    "pixel_count": "integer",
+    "centroid": "[x, y]",
+    "bbox": "[x1, y1, x2, y2]",
+    "mean_rgb": "[r, g, b]",
+    "local_texture_strength": "float",
+    "neighbor_blob_ids": "list of integers"
+  },
+  "output": {
+    "blob_map": "H x W integer blob ID map",
+    "blobs": "List of blob metadata dictionaries"
+  }
+}

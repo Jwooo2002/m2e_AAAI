@@ -1,0 +1,24 @@
+{
+  "module": "io_schema",
+  "goal": "Define unified input and output schemas for the MVP pipeline.",
+  "input_schema": {
+    "image_path": "Path to a single RGB face image.",
+    "annotation_path": "Path to the existing keypoint annotation file for the image.",
+    "output_dir": "Directory where intermediate and final outputs are saved.",
+    "config_path": "Optional path to a pipeline configuration JSON."
+  },
+  "output_schema": {
+    "landmarks": "List of 2D keypoints in image coordinate space.",
+    "semantic_mask": "H x W integer mask.",
+    "blob_map": "H x W integer superpixel/blob ID map.",
+    "blob_metadata": "List of blob-level metadata dictionaries.",
+    "blob_prompts": "List of JSON prompts, one per blob.",
+    "events": "Synthetic event array with x, y, t, p, and optional blob/semantic fields.",
+    "debug_visualizations": [
+      "semantic_mask.png",
+      "superpixel_map.png",
+      "blob_motion_overlay.png",
+      "event_frame_preview.png"
+    ]
+  }
+}

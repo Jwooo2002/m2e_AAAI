@@ -1,0 +1,24 @@
+# Python cache/build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Local IDE/editor state
+.idea/
+.vscode/
+
+# Generated experiment outputs
+outputs/
+
+# Large local data artifacts
+*.npy
+*.npz
+*.tar
+*.tar.gz
+*.zip
+
+# Environment/local files
+.env
+.env.*

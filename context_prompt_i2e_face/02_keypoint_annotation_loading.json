@@ -1,0 +1,40 @@
+{
+  "module": "keypoint_annotation_loading",
+  "goal": "Load existing facial keypoint annotations associated with the input image.",
+  "requirements": [
+    "Do not run MediaPipe, dlib, or any other landmark detector in the MVP.",
+    "Use the keypoints already provided by the dataset annotation files.",
+    "Support common annotation formats such as JSON, CSV, TXT, MAT, or COCO-style keypoint annotations when possible.",
+    "Convert all keypoints into image coordinate space.",
+    "Normalize annotation format into a unified internal schema.",
+    "Extract semantic anchor groups from dataset keypoint indices."
+  ],
+  "semantic_anchor_groups": [
+    "left_eye",
+    "right_eye",
+    "nose",
+    "mouth",
+    "left_eyebrow",
+    "right_eyebrow",
+    "jawline",
+    "face_contour"
+  ],
+  "output": {
+    "landmarks": {
+      "type": "list",
+      "item_format": {
+        "id": "integer",
+        "x": "float",
+        "y": "float",
+        "visibility": "optional float or bool"
+      }
+    },
+    "semantic_anchors": "Dictionary mapping semantic region names to keypoint IDs and coordinates.",
+    "annotation_metadata": {
+      "dataset_name": "string or unknown",
+      "num_keypoints": "integer",
+      "coordinate_format": "xy | yx | normalized_xy | unknown",
+      "visibility_flags": "optional"
+    }
+  }
+}
